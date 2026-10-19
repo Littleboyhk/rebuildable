@@ -18,6 +18,7 @@ except ImportError:  # Keep the scanner usable before an offline dev install.
 
 from .scanner import scan as run_scan
 from .fixer import fix as run_fix
+from .verifier import verify as run_verify
 
 
 def _plain_scan(result: object) -> None:
@@ -72,6 +73,16 @@ def fix_command(path: str, dry_run: bool = False, force: bool = False) -> int:
     return 0 if fixed.after.score == 8 else 1
 
 
+def verify_command(path: str) -> int:
+    try:
+        passed, output = run_verify(path)
+    except (FileNotFoundError, ValueError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 2
+    print(output)
+    return 0 if passed else 1
+
+
 if typer is not None:
     app = typer.Typer(add_completion=False, help="Check whether a project can be rebuilt on a clean Linux machine.")
 
@@ -89,6 +100,10 @@ if typer is not None:
         force: bool = typer.Option(False, "--force", help="Allow overwriting existing files."),
     ) -> NoReturn:
         raise typer.Exit(fix_command(path, dry_run, force))
+
+    @app.command("verify")
+    def verify_cli(path: str = typer.Argument(".", help="Project directory to verify.")) -> NoReturn:
+        raise typer.Exit(verify_command(path))
 else:
     app = None
 
@@ -98,8 +113,8 @@ def main() -> None:
         app()
         return
     args = sys.argv[1:]
-    if not args or args[0] not in {"scan", "fix"}:
-        print("Usage: rebuildable scan|fix <path> [--json|--dry-run|--force]", file=sys.stderr)
+    if not args or args[0] not in {"scan", "fix", "verify"}:
+        print("Usage: rebuildable scan|fix|verify <path> [--json|--dry-run|--force]", file=sys.stderr)
         raise SystemExit(2)
     path = "."
     as_json = "--json" in args
@@ -110,4 +125,6 @@ def main() -> None:
         path = positional[0]
     if args[0] == "fix":
         raise SystemExit(fix_command(path, dry_run, force))
+    if args[0] == "verify":
+        raise SystemExit(verify_command(path))
     raise SystemExit(scan_command(path, as_json))
