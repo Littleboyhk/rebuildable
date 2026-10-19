@@ -48,7 +48,9 @@ class ScanResult:
 
     @property
     def score(self) -> int:
-        return sum(check.passed for check in self.checks)
+        from .scoring import score_checks
+
+        return score_checks(self.checks)
 
     def to_dict(self) -> dict[str, Any]:
         return {

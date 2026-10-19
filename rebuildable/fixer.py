@@ -79,7 +79,9 @@ def _environment_names(root: Path) -> list[str]:
         if source.path.startswith(".env"):
             continue
         names.update(re.findall(r"process\.env\.([A-Z][A-Z0-9_]*)", source.content))
-        names.update(re.findall(r"(?:os\.getenv|os\.environ\.get|os\.environ)\s*\[?\s*[\"']([A-Z][A-Z0-9_]*)", source.content))
+        names.update(re.findall(r"os\.getenv\s*\(\s*[\"']([A-Z][A-Z0-9_]*)", source.content))
+        names.update(re.findall(r"os\.environ\.get\s*\(\s*[\"']([A-Z][A-Z0-9_]*)", source.content))
+        names.update(re.findall(r"os\.environ\s*\[\s*[\"']([A-Z][A-Z0-9_]*)", source.content))
     return sorted(names)
 
 
