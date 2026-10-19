@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#10131c">
+    <meta name="description" content="Rebuildable is a small, honest repair loop for broken repositories.">
+    <title>rebuildable — make broken repos buildable</title>
+    <style>
+      :root {
+        --bg: #10131c;
+        --bg-deep: #0b0e15;
+        --panel: #171c29;
+        --panel-soft: #1c2231;
+        --line: #2b3344;
+        --line-bright: #3c475d;
+        --text: #f2f5fb;
+        --muted: #98a4b9;
+        --quiet: #69758c;
+        --cyan: #72e5d1;
+        --cyan-soft: rgba(114, 229, 209, 0.12);
+        --orange: #ffb36b;
+        --orange-soft: rgba(255, 179, 107, 0.12);
+        --red: #ff7f8c;
+        --shadow: 0 26px 70px rgba(0, 0, 0, 0.28);
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; }
+
+      html {
+        scroll-behavior: smooth;
+        background: var(--bg-deep);
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 86% 8%, rgba(68, 99, 132, 0.2), transparent 25rem),
+          radial-gradient(circle at 15% 30%, rgba(36, 103, 101, 0.12), transparent 28rem),
+          var(--bg);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: inherit; text-decoration: none; }
+      a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
+
+      .page-shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+
+      .topbar {
+        align-items: center;
+        border-bottom: 1px solid rgba(60, 71, 93, 0.68);
+        display: flex;
+        gap: 28px;
+        justify-content: space-between;
+        min-height: 78px;
+      }
+
+      .brand { align-items: center; display: inline-flex; font-size: 16px; font-weight: 760; letter-spacing: -0.02em; }
+      .brand-mark {
+        align-items: center;
+        background: var(--cyan);
+        border-radius: 8px;
+        color: var(--bg-deep);
+        display: inline-flex;
+        font-size: 19px;
+        height: 29px;
+        justify-content: center;
+        margin-right: 10px;
+        transform: rotate(-9deg);
+        width: 29px;
+      }
+      .brand-label { letter-spacing: -0.04em; }
+      .brand-label em { color: var(--cyan); font-style: normal; }
+
+      .nav { display: flex; gap: 24px; margin-left: auto; }
+      .nav a { color: var(--muted); font-size: 12px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; transition: color 160ms ease; }
+      .nav a:hover { color: var(--text); }
+      .status {
+        border: 1px solid var(--line-bright);
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        padding: 7px 11px;
+        white-space: nowrap;
+      }
+      .status::before { background: var(--cyan); border-radius: 50%; content: ""; display: inline-block; height: 6px; margin: 0 7px 1px 0; width: 6px; }
+
+      .hero { align-items: center; display: grid; gap: 74px; grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr); min-height: 600px; padding: 88px 0 72px; }
+      .eyebrow { align-items: center; color: var(--cyan); display: flex; font-size: 11px; font-weight: 750; gap: 9px; letter-spacing: 0.14em; text-transform: uppercase; }
+      .eyebrow-dot { background: var(--cyan); border-radius: 50%; box-shadow: 0 0 0 5px var(--cyan-soft); height: 7px; width: 7px; }
+      h1 { font-size: clamp(50px, 7.2vw, 88px); letter-spacing: -0.085em; line-height: 0.98; margin: 22px 0 24px; max-width: 690px; }
+      .accent { color: var(--cyan); }
+      .lede { color: var(--muted); font-size: 18px; line-height: 1.65; margin: 0; max-width: 590px; }
+      .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+      .button { align-items: center; background: var(--cyan); border: 1px solid var(--cyan); border-radius: 9px; color: #0e2221; display: inline-flex; font-size: 13px; font-weight: 800; gap: 10px; justify-content: center; padding: 12px 17px; transition: transform 160ms ease, background 160ms ease; }
+      .button:hover { background: #9af2e2; transform: translateY(-2px); }
+      .button.secondary { background: transparent; border-color: var(--line-bright); color: var(--text); }
+      .button.secondary:hover { background: var(--panel-soft); border-color: var(--muted); }
+      .hero-note { color: var(--quiet); font-size: 12px; margin-top: 42px; }
+      .mini-label { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: 0.15em; margin-right: 13px; }
+
+      .hero-visual { min-height: 425px; position: relative; }
+      .halo { border: 1px solid rgba(114, 229, 209, 0.25); border-radius: 50%; height: 350px; left: 50%; position: absolute; top: 50%; transform: translate(-50%, -50%) rotate(-18deg); width: 350px; }
+      .halo::before, .halo::after { border: 1px solid rgba(114, 229, 209, 0.16); border-radius: 50%; content: ""; inset: 31px; position: absolute; }
+      .halo::after { border-color: rgba(255, 179, 107, 0.2); inset: 68px; }
+      .orbit-dot { background: var(--orange); border-radius: 50%; box-shadow: 0 0 0 8px var(--orange-soft), 0 0 32px rgba(255, 179, 107, 0.65); height: 10px; position: absolute; right: 10%; top: 16%; width: 10px; }
+      .core { align-items: center; background: linear-gradient(145deg, #26374a, #15252e); border: 1px solid rgba(114, 229, 209, 0.55); border-radius: 50%; box-shadow: 0 0 65px rgba(114, 229, 209, 0.14), inset 0 0 35px rgba(114, 229, 209, 0.12); display: flex; height: 166px; justify-content: center; left: 50%; position: absolute; top: 50%; transform: translate(-50%, -50%); width: 166px; }
+      .core-mark { border: 1px solid var(--cyan); border-radius: 50%; color: var(--cyan); font-size: 48px; height: 94px; line-height: 88px; text-align: center; transform: rotate(-24deg); width: 94px; }
+      .floating-card { background: rgba(23, 28, 41, 0.9); border: 1px solid var(--line-bright); border-radius: 12px; box-shadow: var(--shadow); padding: 14px 15px; position: absolute; backdrop-filter: blur(8px); }
+      .floating-card.top { left: 2%; top: 7%; width: 180px; }
+      .floating-card.bottom { bottom: 8%; right: 0; width: 218px; }
+      .floating-label { color: var(--quiet); display: block; font-size: 9px; font-weight: 800; letter-spacing: 0.15em; margin-bottom: 8px; text-transform: uppercase; }
+      .floating-value { align-items: baseline; display: flex; gap: 8px; }
+      .floating-value strong { color: var(--text); font-size: 28px; letter-spacing: -0.06em; line-height: 1; }
+      .floating-value span { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+      .meter { background: #293245; border-radius: 99px; height: 5px; margin-top: 12px; overflow: hidden; }
+      .meter span { background: var(--cyan); border-radius: inherit; display: block; height: 100%; width: 25%; }
+      .signal { align-items: center; border-top: 1px solid var(--line); display: grid; gap: 20px; grid-template-columns: repeat(3, 1fr); padding: 26px 0 32px; }
+      .signal-item { align-items: center; display: flex; gap: 13px; }
+      .signal-icon { align-items: center; border: 1px solid var(--line-bright); border-radius: 8px; color: var(--cyan); display: flex; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; height: 34px; justify-content: center; width: 34px; }
+      .signal-item strong { display: block; font-size: 13px; }
+      .signal-item span { color: var(--quiet); display: block; font-size: 11px; margin-top: 2px; }
+
+      .section { border-top: 1px solid var(--line); padding: 100px 0; }
+      .section-heading { max-width: 650px; }
+      .section-kicker { color: var(--orange); font-size: 10px; font-weight: 800; letter-spacing: 0.16em; margin: 0 0 15px; text-transform: uppercase; }
+      h2 { font-size: clamp(32px, 4.5vw, 56px); letter-spacing: -0.065em; line-height: 1.05; margin: 0; }
+      .section-intro { color: var(--muted); font-size: 16px; line-height: 1.7; margin: 20px 0 0; max-width: 600px; }
+      .overview-grid { display: grid; gap: 60px; grid-template-columns: 0.9fr 1.1fr; margin-top: 55px; }
+      .manifesto { color: var(--text); font-size: 25px; letter-spacing: -0.04em; line-height: 1.35; margin: 0; max-width: 360px; }
+      .manifesto strong { color: var(--cyan); font-weight: 650; }
+      .principles { border-left: 1px solid var(--line-bright); display: grid; gap: 24px; padding-left: 26px; }
+      .principle { display: grid; gap: 5px; grid-template-columns: 26px 1fr; }
+      .principle-number { color: var(--orange); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; padding-top: 3px; }
+      .principle h3 { font-size: 14px; margin: 0; }
+      .principle p { color: var(--muted); font-size: 13px; margin: 0; }
+
+      .checks-heading { align-items: end; display: flex; justify-content: space-between; gap: 30px; }
+      .checks-heading .section-intro { margin-bottom: 2px; max-width: 340px; }
+      .check-grid { display: grid; gap: 12px; grid-template-columns: repeat(4, 1fr); margin-top: 42px; }
+      .check-card { background: linear-gradient(145deg, rgba(28, 34, 49, 0.9), rgba(19, 24, 36, 0.9)); border: 1px solid var(--line); border-radius: var(--radius); min-height: 235px; padding: 22px; position: relative; transition: border-color 160ms ease, transform 160ms ease; }
+      .check-card:hover { border-color: var(--line-bright); transform: translateY(-3px); }
+      .check-number { color: var(--cyan); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 700; }
+      .check-card h3 { font-size: 17px; letter-spacing: -0.025em; margin: 34px 0 9px; }
+      .check-card p { color: var(--muted); font-size: 12px; line-height: 1.62; margin: 0; }
+      .check-meta { border-top: 1px solid var(--line); bottom: 18px; color: var(--quiet); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; left: 22px; padding-top: 10px; position: absolute; right: 22px; }
+      .check-meta code { color: var(--orange); }
+
+      .flow-section { background: var(--panel); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); margin: 0 0 100px; padding: 54px; }
+      .flow-title { align-items: end; display: flex; gap: 30px; justify-content: space-between; }
+      .flow-title p { color: var(--muted); font-size: 13px; margin: 0; max-width: 300px; }
+      .flow { display: grid; gap: 0; grid-template-columns: repeat(3, 1fr); margin-top: 50px; }
+      .flow-step { border-left: 1px solid var(--line-bright); min-height: 142px; padding: 0 30px; position: relative; }
+      .flow-step:first-child { border-left: 0; padding-left: 0; }
+      .step-no { color: var(--orange); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; margin-bottom: 22px; }
+      .flow-step h3 { font-size: 19px; letter-spacing: -0.03em; margin: 0 0 8px; }
+      .flow-step p { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 0; max-width: 250px; }
+      .flow-arrow { color: var(--cyan); font-size: 20px; position: absolute; right: 21px; top: -7px; }
+
+      .demo-section { border-top: 1px solid var(--line); padding: 100px 0 115px; }
+      .demo-layout { align-items: start; display: grid; gap: 52px; grid-template-columns: minmax(0, 1.12fr) minmax(260px, 0.88fr); margin-top: 50px; }
+      .terminal { background: #0a0d13; border: 1px solid #30394c; border-radius: 15px; box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38); overflow: hidden; }
+      .terminal-bar { align-items: center; background: #141925; border-bottom: 1px solid #252e3f; display: flex; gap: 7px; padding: 13px 15px; }
+      .terminal-bar i { background: #526078; border-radius: 50%; display: block; height: 7px; width: 7px; }
+      .terminal-bar span { color: var(--quiet); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; margin-left: 8px; }
+      pre { color: #bac6d8; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; line-height: 1.8; margin: 0; min-height: 310px; overflow: auto; padding: 24px; white-space: pre-wrap; }
+      .prompt { color: var(--cyan); }
+      .error { color: var(--red); }
+      .pass { color: var(--cyan); }
+      .dim { color: #66738b; }
+      .demo-copy h3 { font-size: 22px; letter-spacing: -0.04em; margin: 0 0 13px; }
+      .demo-copy > p { color: var(--muted); font-size: 14px; line-height: 1.7; margin: 0 0 25px; }
+      .fixture-list { border-top: 1px solid var(--line); margin-top: 25px; }
+      .fixture { align-items: center; border-bottom: 1px solid var(--line); display: flex; gap: 11px; padding: 15px 0; }
+      .fixture-dot { border-radius: 50%; height: 8px; width: 8px; }
+      .fixture-dot.node { background: var(--orange); }
+      .fixture-dot.python { background: #8ca8ff; }
+      .fixture strong { display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 650; }
+      .fixture small { color: var(--quiet); display: block; font-size: 11px; margin-top: 2px; }
+      .inline-link { color: var(--cyan); display: inline-block; font-size: 12px; font-weight: 750; margin-top: 26px; }
+      .inline-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+      .footer { align-items: center; border-top: 1px solid var(--line); color: var(--quiet); display: flex; font-size: 11px; justify-content: space-between; padding: 25px 0 32px; }
+      .footer strong { color: var(--muted); font-weight: 650; }
+
+      @media (max-width: 900px) {
+        .hero { gap: 25px; grid-template-columns: 1fr; padding-top: 65px; }
+        .hero-visual { min-height: 330px; }
+        .halo { height: 275px; width: 275px; }
+        .core { height: 135px; width: 135px; }
+        .core-mark { font-size: 38px; height: 75px; line-height: 70px; width: 75px; }
+        .check-grid { grid-template-columns: repeat(2, 1fr); }
+        .overview-grid { gap: 35px; grid-template-columns: 1fr; }
+      }
+
+      @media (max-width: 640px) {
+        .page-shell { width: min(100% - 28px, 1180px); }
+        .topbar { gap: 14px; min-height: 68px; }
+        .nav { display: none; }
+        .status { font-size: 8px; padding: 6px 8px; }
+        .hero { min-height: 0; padding: 65px 0 55px; }
+        h1 { font-size: clamp(48px, 15vw, 72px); }
+        .lede { font-size: 16px; }
+        .hero-visual { min-height: 300px; }
+        .floating-card.top { left: 0; }
+        .floating-card.bottom { right: 0; }
+        .signal { gap: 22px; grid-template-columns: 1fr; }
+        .section, .demo-section { padding: 70px 0; }
+        .checks-heading, .flow-title { align-items: start; flex-direction: column; }
+        .check-grid { grid-template-columns: 1fr; }
+        .check-card { min-height: 210px; }
+        .flow-section { border-radius: 16px; margin-bottom: 70px; padding: 30px 24px; }
+        .flow { gap: 30px; grid-template-columns: 1fr; }
+        .flow-step, .flow-step:first-child { border-left: 0; border-top: 1px solid var(--line-bright); min-height: 0; padding: 24px 0 0; }
+        .flow-step:first-child { border-top: 0; padding-top: 0; }
+        .flow-arrow { display: none; }
+        .demo-layout { gap: 35px; grid-template-columns: 1fr; }
+        pre { font-size: 10px; padding: 18px; }
+        .footer { align-items: start; flex-direction: column; gap: 8px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar" id="top">
+        <a class="brand" href="#top" aria-label="rebuildable home">
+          <span class="brand-mark" aria-hidden="true">↻</span>
+          <span class="brand-label">rebuild<em>able</em></span>
+        </a>
+        <nav class="nav" aria-label="Primary navigation">
+          <a href="#overview">Why</a>
+          <a href="#checks">Checks</a>
+          <a href="#demo">Demo</a>
+        </nav>
+        <span class="status">STATIC / LOCAL-FIRST</span>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="hero-title">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> repair loop for imperfect repositories</div>
+            <h1 id="hero-title">Turn <span class="accent">broken</span> into <span class="accent">buildable.</span></h1>
+            <p class="lede">Rebuildable gives an unfinished codebase a clear path back to green: inspect the evidence, make the smallest useful repair, and verify every step.</p>
+            <div class="hero-actions">
+              <a class="button" href="#checks">Explore the checks <span aria-hidden="true">↘</span></a>
+              <a class="button secondary" href="#demo">See the demo <span aria-hidden="true">↘</span></a>
+            </div>
+            <p class="hero-note"><span class="mini-label">DESIGNED FOR</span> small repos · clear failures · repeatable fixes</p>
+          </div>
+          <div class="hero-visual" aria-label="A repair cycle moving from a broken state to a green state">
+            <div class="halo" aria-hidden="true"></div>
+            <div class="orbit-dot" aria-hidden="true"></div>
+            <div class="core" aria-hidden="true"><div class="core-mark">↻</div></div>
+            <div class="floating-card top">
+              <span class="floating-label">CURRENT SIGNAL</span>
+              <div class="floating-value"><strong>02</strong><span>/ 08 passing</span></div>
+              <div class="meter" aria-hidden="true"><span></span></div>
+            </div>
+            <div class="floating-card bottom">
+              <span class="floating-label">NEXT MOVE</span>
+              <div class="floating-value"><strong>patch</strong><span>→ verify</span></div>
+              <div class="meter" aria-hidden="true"><span style="width: 66%;"></span></div>
+            </div>
+          </div>
+        </section>
+
+        <div class="signal" aria-label="Project highlights">
+          <div class="signal-item"><div class="signal-icon">08</div><div><strong>deterministic checks</strong><span>one score, eight useful signals</span></div></div>
+          <div class="signal-item"><div class="signal-icon">↗</div><div><strong>evidence before edits</strong><span>errors stay visible and explainable</span></div></div>
+          <div class="signal-item"><div class="signal-icon">0×</div><div><strong>no mystery magic</strong><span>small repairs beat hidden rewrites</span></div></div>
+        </div>
+
+        <section class="section" id="overview" aria-labelledby="overview-title">
+          <div class="section-heading">
+            <p class="section-kicker">THE IDEA</p>
+            <h2 id="overview-title">A repair loop you can trust.</h2>
+            <p class="section-intro">Rebuildable treats “it should work” as a hypothesis. The repository is checked in layers, failures are named, and each fix earns its way into the next run.</p>
+          </div>
+          <div class="overview-grid">
+            <p class="manifesto">A broken repository is not a blank page. It is a map of <strong>near-misses</strong> waiting to be made explicit.</p>
+            <div class="principles">
+              <div class="principle"><span class="principle-number">01</span><div><h3>Start with the smallest signal.</h3><p>Read the tree, manifests, and actual error before reaching for a broad rewrite.</p></div></div>
+              <div class="principle"><span class="principle-number">02</span><div><h3>Make progress measurable.</h3><p>Every run reports the same eight checks, so improvement is visible instead of anecdotal.</p></div></div>
+              <div class="principle"><span class="principle-number">03</span><div><h3>Leave a useful trail.</h3><p>Repairs should be understandable to the next person—and easy to verify from a clean checkout.</p></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="checks" aria-labelledby="checks-title">
+          <div class="checks-heading">
+            <div class="section-heading">
+              <p class="section-kicker">THE REPAIR CONTRACT</p>
+              <h2 id="checks-title">Eight checks.<br>One honest score.</h2>
+            </div>
+            <p class="section-intro">The checks cover the signals that make a small repository safer to rebuild. A pass is evidence, not optimism.</p>
+          </div>
+          <div class="check-grid" aria-label="The eight rebuildable checks">
+            <article class="check-card" data-check="1">
+              <span class="check-number">01 / 08</span>
+              <h3>Hard-coded secrets</h3>
+              <p>Look for common credential shapes without exposing values; safe placeholders remain safe to document.</p>
+              <div class="check-meta">evidence <code>credential patterns</code></div>
+            </article>
+            <article class="check-card" data-check="2">
+              <span class="check-number">02 / 08</span>
+              <h3>Debug artifacts</h3>
+              <p>Spot debugger statements, development logging, and trace calls that should not ship with the project.</p>
+              <div class="check-meta">evidence <code>debugger + console</code></div>
+            </article>
+            <article class="check-card" data-check="3">
+              <span class="check-number">03 / 08</span>
+              <h3>Unresolved markers</h3>
+              <p>Surface TODO, FIXME, XXX, and HACK markers so unfinished work has a visible next step.</p>
+              <div class="check-meta">evidence <code>TODO-style markers</code></div>
+            </article>
+            <article class="check-card" data-check="4">
+              <span class="check-number">04 / 08</span>
+              <h3>Dependency metadata</h3>
+              <p>Find an ecosystem manifest and a lockfile so the project can be installed and rebuilt reproducibly.</p>
+              <div class="check-meta">evidence <code>manifest + lockfile</code></div>
+            </article>
+            <article class="check-card" data-check="5">
+              <span class="check-number">05 / 08</span>
+              <h3>Test coverage signals</h3>
+              <p>Detect conventional test files or directories so a repair has a place to prove behavior.</p>
+              <div class="check-meta">evidence <code>tests + specs</code></div>
+            </article>
+            <article class="check-card" data-check="6">
+              <span class="check-number">06 / 08</span>
+              <h3>Project documentation</h3>
+              <p>Check for a README or documentation directory that explains setup, usage, and rebuild instructions.</p>
+              <div class="check-meta">evidence <code>README / docs</code></div>
+            </article>
+            <article class="check-card" data-check="7">
+              <span class="check-number">07 / 08</span>
+              <h3>Entrypoint discoverability</h3>
+              <p>Confirm that package metadata or a conventional main module tells a new operator where to start.</p>
+              <div class="check-meta">evidence <code>main / index / cli</code></div>
+            </article>
+            <article class="check-card" data-check="8">
+              <span class="check-number">08 / 08</span>
+              <h3>Configuration hygiene</h3>
+              <p>Keep local environment files out of the scanned tree and provide safe, redacted examples when needed.</p>
+              <div class="check-meta">evidence <code>.env + examples</code></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="flow-section" aria-labelledby="flow-title">
+          <div class="flow-title">
+            <div class="section-heading">
+              <p class="section-kicker">THE LOOP</p>
+              <h2 id="flow-title">Evidence → repair → proof.</h2>
+            </div>
+            <p>Repeatable work is calm work. Keep the feedback tight, keep the change small, and let the next run tell you what moved.</p>
+          </div>
+          <div class="flow">
+            <div class="flow-step"><div class="step-no">01 / SCAN</div><h3>See the failure clearly.</h3><p>Inventory the workspace and run the checks without hiding the first useful error.</p><span class="flow-arrow" aria-hidden="true">→</span></div>
+            <div class="flow-step"><div class="step-no">02 / FIX</div><h3>Repair the smallest cause.</h3><p>Restore missing structure, commands, or contracts in a way a human can review.</p><span class="flow-arrow" aria-hidden="true">→</span></div>
+            <div class="flow-step"><div class="step-no">03 / VERIFY</div><h3>Earn the next green.</h3><p>Run the same eight checks again and keep the evidence that moved the score forward.</p></div>
+          </div>
+        </section>
+
+        <section class="demo-section" id="demo" aria-labelledby="demo-title">
+          <div class="section-heading">
+            <p class="section-kicker">A SMALL, BROKEN START</p>
+            <h2 id="demo-title">Start at 2/8.<br>Leave with a map.</h2>
+            <p class="section-intro">The included fixtures are deliberately imperfect. They give a future scanner and fixer a compact playground: two clean signals, then enough missing or malformed pieces to make the failures useful.</p>
+          </div>
+          <div class="demo-layout">
+            <div class="terminal" aria-label="Example output from the rebuildable demo">
+              <div class="terminal-bar"><i></i><i></i><i></i><span>demo / run_demo.sh</span></div>
+              <pre><span class="prompt">$</span> bash demo/run_demo.sh
+
+<span class="dim">rebuildable demo · intentionally broken fixtures</span>
+<span class="pass">baseline</span> 2/8 checks passing
+<span class="pass">01 hard-coded secrets   PASS</span>
+<span class="error">02 debug artifacts       FAIL  development logging</span>
+<span class="error">03 unresolved markers    FAIL  TODO marker</span>
+<span class="error">04 dependency metadata   FAIL  lockfile missing</span>
+<span class="error">05 test coverage signals FAIL  no test files</span>
+<span class="pass">06 project documentation PASS</span>
+<span class="error">07 entrypoint discovery  FAIL  conventional entry missing</span>
+<span class="error">08 configuration hygiene FAIL  local .env present</span>
+
+<span class="prompt">$</span> node demo/broken-node-app/src/start.js
+<span class="error">Error: Cannot find module './missing-config'</span>
+
+<span class="prompt">$</span> python3 app/run.py <span class="dim"># from demo/broken-python-app</span>
+<span class="error">SyntaxError: '(' was never closed</span></pre>
+            </div>
+            <div class="demo-copy">
+              <h3>Two fixtures, one repair vocabulary.</h3>
+              <p>Node and Python fail in different places, but both preserve the same useful starting signal: the workspace and manifest are present. A future fixer can add the missing evidence one repair at a time.</p>
+              <div class="fixture-list" aria-label="Demo fixtures">
+                <a class="fixture" href="../demo/broken-node-app/README.md">
+                  <span class="fixture-dot node" aria-hidden="true"></span>
+                  <span><strong>demo/broken-node-app</strong><small>CommonJS start script with deliberate repair signals</small></span>
+                </a>
+                <a class="fixture" href="../demo/broken-python-app/README.md">
+                  <span class="fixture-dot python" aria-hidden="true"></span>
+                  <span><strong>demo/broken-python-app</strong><small>Package metadata with deliberate repair signals</small></span>
+                </a>
+              </div>
+              <a class="inline-link" href="../demo/run_demo.sh">Open the runnable demo script ↗</a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span><strong>rebuildable</strong> · repair is a sequence, not a surprise.</span>
+        <span>static docs · no network required</span>
+      </footer>
+    </div>
+  </body>
+</html>

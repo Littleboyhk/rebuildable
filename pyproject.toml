@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rebuildable"
+version = "0.1.0"
+description = "Offline rebuildability checks for Python and Node projects."
+requires-python = ">=3.12"
+dependencies = ["typer>=0.12", "rich>=13"]
+
+[project.scripts]
+rebuildable = "rebuildable.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["rebuildable*"]
