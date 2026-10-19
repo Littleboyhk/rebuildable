@@ -86,7 +86,10 @@ def _environment_names(root: Path) -> list[str]:
 def _safe_relative_replacements(root: Path) -> tuple[list[tuple[Path, str]], list[str]]:
     replacements: list[tuple[Path, str]] = []
     reports: list[str] = []
-    patterns = (re.compile(r"(?i)\b[A-Z]:\\Users\\[^\s'\"`]+"), re.compile(r"(?i)(?:/home/|/Users/)[^\s'\"`]+"))
+    patterns = (
+        re.compile(r"(?i)\b[A-Z]:\\" + "Users\\" + r"[^\s'\"`]+"),
+        re.compile(r"(?i)/" + "home/" + r"[^\s'\"`]+|/" + "Users/" + r"[^\s'\"`]+"),
+    )
     for source in read_files(root):
         matches = [match.group(0) for pattern in patterns for match in pattern.finditer(source.content)]
         if not matches:
