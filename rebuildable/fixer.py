@@ -117,10 +117,10 @@ def fix(path: str | Path, *, dry_run: bool = False, force: bool = False) -> FixR
 
     def plan(relative: str, content: str, detail: str) -> None:
         target = root / relative
+        if target.exists() and target.read_text(encoding="utf-8") == content:
+            return
         if target.exists() and not force:
             reports.append(f"Skipped existing {relative}; use --force to overwrite it.")
-            return
-        if target.exists() and target.read_text(encoding="utf-8") == content:
             return
         actions.append(FixAction(relative, "write", detail))
         if not dry_run:
@@ -138,7 +138,7 @@ def fix(path: str | Path, *, dry_run: bool = False, force: bool = False) -> FixR
     if ".env.example" not in files:
         names = _environment_names(root)
         plan(".env.example", "".join(f"{name}=\n" for name in names) or "# Add project settings here\n", "generate redacted environment settings")
-    if not any(name.startswith("readme") for name in files):
+    if not any(name.startswith("readme") for name in files) or (force and not before.checks[5].passed):
         plan("README.md", _readme("node" if kind == "node" else "python"), "generate Setup, Run, and Test instructions")
     has_test = before.checks[4].passed
     if not has_test:

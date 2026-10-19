@@ -9,7 +9,7 @@ checks before it reports the useful failures:
   development-only debug line.
 - `pyproject.toml` has no project script pointing at the non-conventional
   `app/run.py` module.
-- There is no test file or dependency lockfile yet.
+- There is no test file and the app itself is not runnable in a clean environment.
 - `.env` is a local configuration file; its value is harmless demo data, but
   the file still belongs outside a committed project tree.
 
