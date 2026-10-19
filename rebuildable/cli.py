@@ -17,6 +17,7 @@ except ImportError:  # Keep the scanner usable before an offline dev install.
     Table = None  # type: ignore[assignment,misc]
 
 from .scanner import scan as run_scan
+from .fixer import fix as run_fix
 
 
 def _plain_scan(result: object) -> None:
@@ -52,6 +53,25 @@ def scan_command(path: str, as_json: bool = False) -> int:
     return 0 if result.score == 8 else 1
 
 
+def fix_command(path: str, dry_run: bool = False, force: bool = False) -> int:
+    try:
+        fixed = run_fix(path, dry_run=dry_run, force=force)
+    except (FileNotFoundError, ValueError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 2
+    print(f"Before: {fixed.before.score}/8")
+    if fixed.actions:
+        print("Planned changes:" if dry_run else "Changes:")
+        for action in fixed.actions:
+            print(f"- {action.action} {action.path}: {action.detail}")
+    else:
+        print("No file changes needed.")
+    for report in fixed.reports:
+        print(f"- Note: {report}")
+    print(f"After: {fixed.after.score}/8")
+    return 0 if fixed.after.score == 8 else 1
+
+
 if typer is not None:
     app = typer.Typer(add_completion=False, help="Check whether a project can be rebuilt on a clean Linux machine.")
 
@@ -61,6 +81,14 @@ if typer is not None:
         as_json: bool = typer.Option(False, "--json", help="Print the scan as JSON."),
     ) -> NoReturn:
         raise typer.Exit(scan_command(path, as_json))
+
+    @app.command("fix")
+    def fix_cli(
+        path: str = typer.Argument(".", help="Project directory to repair."),
+        dry_run: bool = typer.Option(False, "--dry-run", help="Only print planned changes."),
+        force: bool = typer.Option(False, "--force", help="Allow overwriting existing files."),
+    ) -> NoReturn:
+        raise typer.Exit(fix_command(path, dry_run, force))
 else:
     app = None
 
@@ -70,12 +98,16 @@ def main() -> None:
         app()
         return
     args = sys.argv[1:]
-    if not args or args[0] != "scan":
-        print("Usage: rebuildable scan <path> [--json]", file=sys.stderr)
+    if not args or args[0] not in {"scan", "fix"}:
+        print("Usage: rebuildable scan|fix <path> [--json|--dry-run|--force]", file=sys.stderr)
         raise SystemExit(2)
     path = "."
     as_json = "--json" in args
+    dry_run = "--dry-run" in args
+    force = "--force" in args
     positional = [item for item in args[1:] if not item.startswith("-")]
     if positional:
         path = positional[0]
+    if args[0] == "fix":
+        raise SystemExit(fix_command(path, dry_run, force))
     raise SystemExit(scan_command(path, as_json))
