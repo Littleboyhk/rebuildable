@@ -60,9 +60,15 @@ def _kind_and_files(root: Path) -> tuple[str, dict[str, str]]:
     return detect_kind(root, collected), {Path(item.path).name.lower(): item.content for item in collected if "/" not in item.path}
 
 
-def _dockerfile(kind: str) -> str:
+def _dockerfile(kind: str, files: dict[str, str]) -> str:
     if kind == "node":
         return """FROM node:20-bookworm-slim\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nCMD [\"npm\", \"start\"]\n"""
+    if "uv.lock" in files:
+        return """FROM python:3.12-slim\nWORKDIR /app\nCOPY pyproject.toml uv.lock ./\nRUN uv sync --frozen\nCOPY . .\nCMD [\"python\", \"-m\", \"app\"]\n"""
+    if "poetry.lock" in files:
+        return """FROM python:3.12-slim\nWORKDIR /app\nCOPY pyproject.toml poetry.lock ./\nRUN poetry install --no-interaction\nCOPY . .\nCMD [\"python\", \"-m\", \"app\"]\n"""
+    if "pipfile.lock" in files:
+        return """FROM python:3.12-slim\nWORKDIR /app\nCOPY Pipfile Pipfile.lock ./\nRUN pipenv install --system --deploy\nCOPY . .\nCMD [\"python\", \"-m\", \"app\"]\n"""
     return """FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt ./\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nCMD [\"python\", \"-m\", \"app\"]\n"""
 
 
@@ -136,7 +142,7 @@ def fix(path: str | Path, *, dry_run: bool = False, force: bool = False) -> FixR
         reports.append("Could not infer a runtime version; add a runtime pin manually.")
 
     if "dockerfile" not in files:
-        plan("Dockerfile", _dockerfile("node" if kind == "node" else "python"), "generate a Dockerfile template")
+        plan("Dockerfile", _dockerfile("node" if kind == "node" else "python", files), "generate a Dockerfile template")
     if ".env.example" not in files:
         names = _environment_names(root)
         plan(".env.example", "".join(f"{name}=\n" for name in names) or "# Add project settings here\n", "generate redacted environment settings")
