@@ -1,7 +1,5 @@
 """Typer/Rich command-line interface for rebuildable."""
 
-from __future__ import annotations
-
 import json
 import sys
 from pathlib import Path
@@ -23,13 +21,16 @@ from .verifier import verify as run_verify
 
 def _plain_scan(result: object) -> None:
     payload = result.to_dict()  # type: ignore[attr-defined]
-    print(f"{'#':<3} {'CHECK':<24} {'STATUS':<6} REASON")
+    print(f"{'#':<3} {'Check':<24} {'Status':<6} {'Reason':<60} Fix hint")
     for check in payload["checks"]:
-        print(f"{check['check']:<3} {check['name']:<24} {check['status']:<6} {check['reason']}")
+        print(
+            f"{check['check']:<3} {check['name']:<24} {check['status']:<6} "
+            f"{check['reason']:<60} {check['fix_hint']}"
+        )
     print(f"Score: {payload['score']}/{payload['total']}")
 
 
-def _render_scan(result: object, as_json: bool) -> None:
+def _render_scan(result: object, as_json: bool = False) -> None:
     payload = result.to_dict()  # type: ignore[attr-defined]
     if as_json:
         print(json.dumps(payload, indent=2))
@@ -89,7 +90,7 @@ if typer is not None:
     @app.command("scan")
     def scan_cli(
         path: str = typer.Argument(".", help="Project directory to scan."),
-        as_json: bool = typer.Option(False, "--json", help="Print the scan as JSON."),
+        as_json: bool = typer.Option(False, "--json", flag_value=True, help="Print the scan as JSON."),
     ) -> NoReturn:
         raise typer.Exit(scan_command(path, as_json))
 

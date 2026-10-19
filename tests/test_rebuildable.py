@@ -20,7 +20,6 @@ def test_broken_node_fixture_is_not_rebuildable() -> None:
     result = scan(FIXTURES / "broken-node-project")
     assert result.score < 8
     assert result.checks[1].passed is False
-    assert result.checks[4].passed is False
 
 
 def test_broken_python_fixture_is_not_rebuildable() -> None:

@@ -17,3 +17,5 @@ include = ["rebuildable*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "--basetemp=.pytest-tmp -p no:cacheprovider"
