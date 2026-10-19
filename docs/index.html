@@ -301,53 +301,53 @@
             <p class="section-intro">The checks cover the signals that make a small repository safer to rebuild. A pass is evidence, not optimism.</p>
           </div>
           <div class="check-grid" aria-label="The eight rebuildable checks">
-            <article class="check-card" data-check="1">
-              <span class="check-number">01 / 08</span>
-              <h3>Hard-coded secrets</h3>
-              <p>Look for common credential shapes without exposing values; safe placeholders remain safe to document.</p>
-              <div class="check-meta">evidence <code>credential patterns</code></div>
-            </article>
-            <article class="check-card" data-check="2">
-              <span class="check-number">02 / 08</span>
-              <h3>Debug artifacts</h3>
-              <p>Spot debugger statements, development logging, and trace calls that should not ship with the project.</p>
-              <div class="check-meta">evidence <code>debugger + console</code></div>
-            </article>
-            <article class="check-card" data-check="3">
-              <span class="check-number">03 / 08</span>
-              <h3>Unresolved markers</h3>
-              <p>Surface TODO, FIXME, XXX, and HACK markers so unfinished work has a visible next step.</p>
-              <div class="check-meta">evidence <code>TODO-style markers</code></div>
-            </article>
-            <article class="check-card" data-check="4">
-              <span class="check-number">04 / 08</span>
-              <h3>Dependency metadata</h3>
-              <p>Find an ecosystem manifest and a lockfile so the project can be installed and rebuilt reproducibly.</p>
-              <div class="check-meta">evidence <code>manifest + lockfile</code></div>
-            </article>
-            <article class="check-card" data-check="5">
-              <span class="check-number">05 / 08</span>
-              <h3>Test coverage signals</h3>
-              <p>Detect conventional test files or directories so a repair has a place to prove behavior.</p>
-              <div class="check-meta">evidence <code>tests + specs</code></div>
-            </article>
-            <article class="check-card" data-check="6">
-              <span class="check-number">06 / 08</span>
-              <h3>Project documentation</h3>
-              <p>Check for a README or documentation directory that explains setup, usage, and rebuild instructions.</p>
-              <div class="check-meta">evidence <code>README / docs</code></div>
-            </article>
-            <article class="check-card" data-check="7">
-              <span class="check-number">07 / 08</span>
-              <h3>Entrypoint discoverability</h3>
-              <p>Confirm that package metadata or a conventional main module tells a new operator where to start.</p>
-              <div class="check-meta">evidence <code>main / index / cli</code></div>
-            </article>
-            <article class="check-card" data-check="8">
-              <span class="check-number">08 / 08</span>
-              <h3>Configuration hygiene</h3>
-              <p>Keep local environment files out of the scanned tree and provide safe, redacted examples when needed.</p>
-              <div class="check-meta">evidence <code>.env + examples</code></div>
+              <article class="check-card" data-check="1">
+               <span class="check-number">01 / 08</span>
+               <h3>Git history</h3>
+               <p>Require a Git repository with at least one commit so the clean-machine input is reproducible.</p>
+               <div class="check-meta">evidence <code>HEAD commit</code></div>
+             </article>
+             <article class="check-card" data-check="2">
+               <span class="check-number">02 / 08</span>
+               <h3>Dependency lock</h3>
+               <p>Find a supported lockfile, or a requirements.txt whose every dependency is pinned with ==.</p>
+               <div class="check-meta">evidence <code>lockfile</code></div>
+             </article>
+             <article class="check-card" data-check="3">
+               <span class="check-number">03 / 08</span>
+               <h3>Runtime pin</h3>
+               <p>Confirm that Node or Python has an explicit version in a version file, engines, or pyproject.</p>
+               <div class="check-meta">evidence <code>runtime declaration</code></div>
+             </article>
+             <article class="check-card" data-check="4">
+               <span class="check-number">04 / 08</span>
+               <h3>Docker build</h3>
+               <p>Require a Dockerfile with FROM, a lockfile install, and CMD or ENTRYPOINT.</p>
+               <div class="check-meta">evidence <code>build + run contract</code></div>
+             </article>
+             <article class="check-card" data-check="5">
+               <span class="check-number">05 / 08</span>
+               <h3>Test command</h3>
+               <p>Find a package.json test script, pytest configuration, or Makefile test target.</p>
+               <div class="check-meta">evidence <code>repeatable test</code></div>
+             </article>
+             <article class="check-card" data-check="6">
+               <span class="check-number">06 / 08</span>
+               <h3>README steps</h3>
+               <p>Check that README headings describe Setup, Run, and Test steps for the next operator.</p>
+               <div class="check-meta">evidence <code>Setup / Run / Test</code></div>
+             </article>
+             <article class="check-card" data-check="7">
+               <span class="check-number">07 / 08</span>
+               <h3>Settings and secrets</h3>
+               <p>Require .env.example and scan source, config, and docs for common hardcoded secret patterns.</p>
+               <div class="check-meta">evidence <code>redacted settings</code></div>
+             </article>
+             <article class="check-card" data-check="8">
+               <span class="check-number">08 / 08</span>
+               <h3>Relative paths</h3>
+               <p>Reject author-machine paths such as home directories and Windows user folders in project files.</p>
+               <div class="check-meta">evidence <code>portable paths</code></div>
             </article>
           </div>
         </section>
@@ -370,8 +370,8 @@
         <section class="demo-section" id="demo" aria-labelledby="demo-title">
           <div class="section-heading">
             <p class="section-kicker">A SMALL, BROKEN START</p>
-            <h2 id="demo-title">Start at 2/8.<br>Leave with a map.</h2>
-            <p class="section-intro">The included fixtures are deliberately imperfect. They give a future scanner and fixer a compact playground: two clean signals, then enough missing or malformed pieces to make the failures useful.</p>
+             <h2 id="demo-title">Start at 5/8.<br>Leave at 8/8.</h2>
+             <p class="section-intro">The included fixtures are deliberately imperfect. The scanner shows the missing Dockerfile, README sections, and settings file, then the offline fixer generates them without installing anything.</p>
           </div>
           <div class="demo-layout">
             <div class="terminal" aria-label="Example output from the rebuildable demo">
@@ -379,25 +379,25 @@
               <pre><span class="prompt">$</span> bash demo/run_demo.sh
 
 <span class="dim">rebuildable demo · intentionally broken fixtures</span>
-<span class="pass">baseline</span> 2/8 checks passing
-<span class="pass">01 hard-coded secrets   PASS</span>
-<span class="error">02 debug artifacts       FAIL  development logging</span>
-<span class="error">03 unresolved markers    FAIL  TODO marker</span>
-<span class="error">04 dependency metadata   FAIL  lockfile missing</span>
-<span class="error">05 test coverage signals FAIL  no test files</span>
-<span class="pass">06 project documentation PASS</span>
-<span class="error">07 entrypoint discovery  FAIL  conventional entry missing</span>
-<span class="error">08 configuration hygiene FAIL  local .env present</span>
+<span class="pass">baseline</span> 5/8 checks passing
+<span class="pass">01 Git repository         PASS</span>
+<span class="pass">02 Dependency lockfile    PASS</span>
+<span class="pass">03 Runtime version        PASS</span>
+<span class="error">04 Dockerfile             FAIL</span>
+<span class="pass">05 Test command           PASS</span>
+<span class="error">06 README instructions   FAIL</span>
+<span class="error">07 Settings and secrets  FAIL</span>
+<span class="pass">08 Relative paths         PASS</span>
 
-<span class="prompt">$</span> node demo/broken-node-app/src/start.js
-<span class="error">Error: Cannot find module './missing-config'</span>
+<span class="prompt">$</span> python3 -m rebuildable fix demo/broken-node-app --force
+<span class="pass">After: 8/8</span>
 
-<span class="prompt">$</span> python3 app/run.py <span class="dim"># from demo/broken-python-app</span>
-<span class="error">SyntaxError: '(' was never closed</span></pre>
+<span class="prompt">$</span> python3 -m rebuildable scan demo/broken-node-app
+<span class="pass">Score: 8/8</span></pre>
             </div>
             <div class="demo-copy">
               <h3>Two fixtures, one repair vocabulary.</h3>
-              <p>Node and Python fail in different places, but both preserve the same useful starting signal: the workspace and manifest are present. A future fixer can add the missing evidence one repair at a time.</p>
+               <p>Node and Python fail in different places, but both preserve useful metadata for the same repair loop. The fixer adds only the missing evidence one file at a time.</p>
               <div class="fixture-list" aria-label="Demo fixtures">
                 <a class="fixture" href="../demo/broken-node-app/README.md">
                   <span class="fixture-dot node" aria-hidden="true"></span>
